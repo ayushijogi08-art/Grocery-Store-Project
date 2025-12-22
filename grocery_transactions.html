@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            min-height: 100vh;
+            display: flex;
+            padding: 0;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+        .active-link {
+            background-color: #ebf5ff; /* Tailwind blue-50 */
+            color: #2563eb; /* Tailwind blue-600 */
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 1rem 0;
+                overflow-x: scroll;
+            }
+            .sidebar a {
+                white-space: nowrap;
+            }
+        }
+        table th, table td {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar shadow-md z-10">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6 hidden md:block">Dashboard</h1>
+            <nav class="flex md:flex-col gap-4 overflow-x-auto pb-2 md:pb-0">
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200 active-link" data-section="dashboard">
+                    🏠 Dashboard
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="sales-entry">
+                    💰 Sales Entry
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="purchase-entry">
+                    📦 Purchase Entry
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="expense-entry">
+                    📉 Expense Entry
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="product-management">
+                    ➕ Product Management
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="inventory-report">
+                    📊 Inventory Report
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="income-report">
+                    📈 Income & Expense Report
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="customers">
+                    👥 Customers
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="vendors">
+                    🚚 Vendors
+                </a>
+                <a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-colors duration-200" data-section="sales-analysis">
+                    ⭐ Sales Analysis
+                </a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+
+            <div class="bg-gray-100 p-4 rounded-lg shadow-inner mb-6">
+                <p class="text-sm font-medium text-gray-700">Current User: <span id="user-id" class="font-mono text-gray-600 break-all">Loading...</span></p>
+            </div>
+
+            <div id="dashboard" class="page-section">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="card-sales" class="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                        <p class="text-sm text-gray-500">Today's Sales</p>
+                        <p id="dashboard-sales" class="text-3xl font-bold text-gray-800 mt-2">₹0.00</p>
+                    </div>
+                    <div id="card-expenses" class="bg-white p-6 rounded-xl shadow-md border-t-4 border-red-500 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                        <p class="text-sm text-gray-500">Today's Expenses</p>
+                        <p id="dashboard-expenses" class="text-3xl font-bold text-gray-800 mt-2">₹0.00</p>
+                    </div>
+                    <div id="card-profit" class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-500 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                        <p class="text-sm text-gray-500">Today's Net Profit</p>
+                        <p id="dashboard-net-profit" class="text-3xl font-bold text-gray-800 mt-2">₹0.00</p>
+                    </div>
+                </div>
+
+                <div id="dashboard-details" class="mt-8 bg-white p-6 rounded-xl shadow-md hidden">
+                    <h3 id="dashboard-details-title" class="text-2xl font-semibold text-gray-700 mb-4"></h3>
+                    <div id="dashboard-transaction-list" class="space-y-3">
+                        </div>
+                </div>
+            </div>
+            <div id="sales-entry" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Sales Entry</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-green-700">Log New Sale</h3>
+                    <form id="sales-form" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="sales-date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="sales-date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="sales-customer" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                                <input type="text" id="sales-customer" placeholder="New or existing customer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 list-input" list="customer-names">
+                                <datalist id="customer-names"></datalist>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label for="sales-item" class="block text-sm font-medium text-gray-700">Item</label>
+                                <input type="text" id="sales-item" placeholder="e.g., Milk" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" list="product-names-sales">
+                                <datalist id="product-names-sales"></datalist>
+                            </div>
+                            <div>
+                                <label for="sales-quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                                <input type="number" id="sales-quantity" placeholder="e.g., 2" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="1">
+                            </div>
+                            <div>
+                                <label for="sales-price" class="block text-sm font-medium text-gray-700">Price (per item)</label>
+                                <input type="number" id="sales-price" placeholder="e.g., 5.99" step="0.01" required min="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <button type="button" id="add-to-invoice-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Add Item
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="sales-invoice" class="mt-6 p-4 bg-gray-50 rounded-lg hidden">
+                        <h4 class="text-lg font-semibold mb-2">Current Invoice</h4>
+                        <ul id="sales-invoice-items" class="space-y-2"></ul>
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                             <div class="flex justify-between items-center mb-4">
+                                <p class="text-sm font-medium text-gray-700">Payment Method</p>
+                                <select id="sales-payment-method" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="cash">Cash</option>
+                                    <option value="debit">Debit</option>
+                                    <option value="credit">Credit</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center text-xl font-bold">
+                                <span>Total:</span>
+                                <span id="sales-invoice-total">₹0.00</span>
+                            </div>
+                            <button id="save-sales-transaction" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4">
+                                Save Transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="purchase-entry" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Purchase Entry</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-red-700">Log New Purchase</h3>
+                    <form id="purchase-form" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="purchase-date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="purchase-date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="purchase-vendor" class="block text-sm font-medium text-gray-700">Vendor Name</label>
+                                <input type="text" id="purchase-vendor" placeholder="New or existing vendor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 list-input" list="vendor-names">
+                                <datalist id="vendor-names"></datalist>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label for="purchase-item" class="block text-sm font-medium text-gray-700">Item</label>
+                                <input type="text" id="purchase-item" placeholder="e.g., Milk" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" list="product-names-purchase">
+                                <datalist id="product-names-purchase"></datalist>
+                            </div>
+                            <div>
+                                <label for="purchase-quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                                <input type="number" id="purchase-quantity" placeholder="e.g., 2" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="12">
+                            </div>
+                            <div>
+                                <label for="purchase-price" class="block text-sm font-medium text-gray-700">Cost (per item)</label>
+                                <input type="number" id="purchase-price" placeholder="e.g., 4.50" step="0.01" required min="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <button type="button" id="add-to-purchase-invoice-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Add Item
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="purchase-invoice" class="mt-6 p-4 bg-gray-50 rounded-lg hidden">
+                        <h4 class="text-lg font-semibold mb-2">Current Invoice</h4>
+                        <ul id="purchase-invoice-items" class="space-y-2"></ul>
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                             <div class="flex justify-between items-center mb-4">
+                                <p class="text-sm font-medium text-gray-700">Payment Method</p>
+                                <select id="purchase-payment-method" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="cash">Cash</option>
+                                    <option value="debit">Debit</option>
+                                    <option value="credit">Credit</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center text-xl font-bold">
+                                <span>Total:</span>
+                                <span id="purchase-invoice-total">₹0.00</span>
+                            </div>
+                            <button id="save-purchase-transaction" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mt-4">
+                                Save Transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="expense-entry" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Expense Entry</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Log New Expense</h3>
+                    <form id="expense-form" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="expense-date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="expense-date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="expense-item" class="block text-sm font-medium text-gray-700">Description</label>
+                                <input type="text" id="expense-item" placeholder="e.g., Rent" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" list="expense-names">
+                                <datalist id="expense-names"></datalist>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="expense-amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                                <input type="number" id="expense-amount" placeholder="e.g., 500" step="0.01" required min="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div class="lg:col-span-2 flex items-end">
+                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    Add Expense
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="expense-list" class="mt-6 space-y-4">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700 border-t pt-4">Recent Expenses</h3>
+                        </div>
+                </div>
+            </div>
+            
+            <div id="product-management" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Product Management</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-blue-700">Add New Product to Inventory</h3>
+                    <form id="add-product-form" class="space-y-4">
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="product-name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                                <input type="text" id="product-name" placeholder="e.g., Apple 1kg" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="product-category" class="block text-sm font-medium text-gray-700">Category</label>
+                                <input type="text" id="product-category" placeholder="e.g., Produce" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" list="category-names">
+                                <datalist id="category-names"></datalist>
+                            </div>
+                            <div>
+                                <label for="product-price" class="block text-sm font-medium text-gray-700">Selling Price (₹)</label>
+                                <input type="number" id="product-price" placeholder="e.g., 80.00" step="0.01" required min="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="product-stock" class="block text-sm font-medium text-gray-700">Initial Stock</label>
+                                <input type="number" id="product-stock" placeholder="e.g., 50" required min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Add Product to Inventory
+                        </button>
+                    </form>
+                </div>
+                
+                <h3 class="text-xl font-semibold mb-3 text-gray-700">Current Inventory List</h3>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
+                        <input type="text" id="product-management-search" placeholder="Search product..." class="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select id="product-management-filter-category" class="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (₹)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-management-list" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading products...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="inventory-report" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Inventory Report</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
+                        <input type="text" id="inventory-search" placeholder="Search product..." class="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select id="inventory-filter-category" class="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (₹)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-list" class="bg-white divide-y divide-gray-200">
+                                <tr id="inventory-loading"><td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading inventory...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="income-report" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Income & Expense Report</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3">Filter Period 📅</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="col-span-1">
+                            <label for="report-start-date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" id="report-start-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div class="col-span-1">
+                            <label for="report-end-date" class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" id="report-end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div class="col-span-2 flex justify-end gap-2">
+                             <button id="report-today-btn" class="w-full md:w-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700">Today</button>
+                             <button id="report-month-btn" class="w-full md:w-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700">This Month</button>
+                             <button id="report-year-btn" class="w-full md:w-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700">This Year</button>
+                             <button id="generate-report-btn" class="w-full md:w-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Generate Report</button>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-4">Summary</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-4 rounded-lg shadow-inner border-t-4 border-green-500">
+                            <p class="text-sm text-gray-500">Total Sales (Income)</p>
+                            <p id="total-sales" class="text-xl font-bold text-gray-800 mt-1">₹0.00</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-inner border-t-4 border-red-500">
+                            <p class="text-sm text-gray-500">Total Expenses</p>
+                            <p id="total-expenses" class="text-xl font-bold text-gray-800 mt-1">₹0.00</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-inner border-t-4 border-blue-500">
+                            <p class="text-sm text-gray-500">Net Profit/Loss</p>
+                            <p id="net-profit-report" class="text-3xl font-bold text-gray-800 mt-2">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customers" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Customers</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-blue-600">Quick Add New Customer</h3>
+                    <form id="add-customer-form" class="space-y-4">
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <input type="text" id="new-customer-name" placeholder="Customer Name (Required)" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <input type="text" id="new-customer-contact" placeholder="Contact (Optional)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Add Customer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3">Customer List</h3>
+                    <input type="text" id="customers-search" placeholder="Search customer by name..." class="mb-4 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <div id="customers-list" class="space-y-4"></div>
+                </div>
+            </div>
+            <div id="vendors" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Vendors</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3 text-red-600">Quick Add New Vendor</h3>
+                    <form id="add-vendor-form" class="space-y-4">
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <input type="text" id="new-vendor-name" placeholder="Vendor Name (Required)" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <input type="text" id="new-vendor-contact" placeholder="Contact (Optional)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Add Vendor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-3">Vendor List</h3>
+                    <input type="text" id="vendors-search" placeholder="Search vendor by name..." class="mb-4 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <div id="vendors-list" class="space-y-4"></div>
+                </div>
+            </div>
+            <div id="details-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 hidden flex justify-center items-center p-4">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+                    <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-xl">&times;</button>
+                    <div class="p-6 md:p-8">
+                        <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+                        <div id="modal-balance-container" class="bg-blue-50 p-4 rounded-lg flex justify-between items-center mb-6">
+                            <span id="modal-balance-label" class="font-medium"></span>
+                            <span id="modal-balance-amount" class="text-2xl font-bold"></span>
+                        </div>
+                        
+                        <div id="transaction-list-container">
+                            <h4 class="text-lg font-semibold mb-2">Transaction History</h4>
+                            <ul id="modal-transaction-list" class="space-y-2"></ul>
+                        </div>
+                        
+                        <h4 class="text-lg font-semibold mt-6 mb-2">Add Payment/Credit</h4>
+                        <form id="payment-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Amount</label>
+                                <input type="number" id="payment-amount" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div class="flex gap-4">
+                                <select id="payment-type" class="w-1/2 rounded-md border-gray-300 shadow-sm">
+                                    <option value="payment">Payment (Reduces Balance)</option>
+                                    <option value="credit">Credit (Increases Balance)</option>
+                                </select>
+                                <button type="submit" class="w-1/2 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                    Add Entry
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sales-analysis" class="page-section hidden">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Sales Analysis</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Top Selling Products by Quantity</h3>
+                    <div class="relative h-96">
+                        <canvas id="sales-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md mt-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Top Selling Products by Revenue</h3>
+                    <div id="top-selling-products-revenue" class="space-y-4">
+                        <p class="text-center text-gray-500">Loading sales analysis...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="mt-8">
+    <button id="clear-all-btn" class="px-6 py-2 bg-red-600 text-white rounded-md font-bold hover:bg-red-700">
+        Clear All Transactions (Reset Dashboard)
+    </button>
+</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, Timestamp, setDoc, doc, updateDoc, increment, getDocs, where, orderBy, getDoc, deleteDoc, writeBatch, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- Product Data ---
+        const PRODUCTS_DATA = [
+            { name: 'Krackjack Biscuit', category: 'Biscuits', price: 10.0, stock: 50 },
+            { name: '50-50 Biscuit', category: 'Biscuits', price: 10.0, stock: 50 },
+            { name: 'Shampoo ₹1 Sachet', category: 'Shampoo', price: 1.0, stock: 100 },
+            { name: 'Shampoo ₹2 Sachet', category: 'Shampoo', price: 2.0, stock: 100 },
+            { name: 'Besan (500g)', category: 'Flour', price: 40.0, stock: 20 },
+            { name: 'Rawa (500g)', category: 'Flour', price: 30.0, stock: 20 },
+            { name: 'Maida (500g)', category: 'Flour', price: 28.0, stock: 20 },
+            { name: 'Dates (250g)', category: 'Dry Fruits', price: 60.0, stock: 15 },
+            { name: 'Maggi Small Pack', category: 'Instant Food', price: 14.0, stock: 40 },
+            { name: 'Baby Soap', category: 'Soap', price: 25.0, stock: 30 },
+            { name: 'Baby Powder', category: 'Baby Care', price: 60.0, stock: 25 },
+            { name: 'Ponds Powder (50g)', category: 'Body Powder', price: 40.0, stock: 25 },
+            { name: 'WhiteTone Powder', category: 'Body Powder', price: 55.0, stock: 25 },
+            { name: 'Dermicool Powder (50g)', category: 'Body Powder', price: 65.0, stock: 25 },
+            { name: 'Agarbatti', category: 'Incense', price: 20.0, stock: 50 },
+            { name: 'Dhoop', category: 'Incense', price: 20.0, stock: 50 },
+            { name: 'Rolli (Pooja)', category: 'Pooja Items', price: 10.0, stock: 30 },
+            { name: 'Kumkum (Pooja)', category: 'Pooja Items', price: 15.0, stock: 30 },
+            { name: 'Pooja Rice (100g)', category: 'Pooja Items', price: 5.0, stock: 30 },
+            { name: 'Everest Chilli Powder (50g)', category: 'Masala', price: 30.0, stock: 20 },
+            { name: 'Everest Turmeric (50g)', category: 'Masala', price: 25.0, stock: 20 },
+            { name: 'Everest Garam Masala (50g)', category: 'Masala', price: 35.0, stock: 20 },
+            { name: 'Tea (Tata 250g)', category: 'Tea', price: 150.0, stock: 20 },
+            { name: 'Sugar (1kg)', category: 'Sugar', price: 50.0, stock: 30 },
+            { name: 'Surf Excel Detergent (500g)', category: 'Detergent Powder', price: 60.0, stock: 20 },
+            { name: 'Wheel Detergent Powder (1kg)', category: 'Detergent Powder', price: 70.0, stock: 20 },
+            { name: 'Clinic Plus Shampoo 80ml', category: 'Shampoo', price: 45.0, stock: 20 },
+            { name: 'Head & Shoulders Shampoo 100ml', category: 'Shampoo', price: 55.0, stock: 20 },
+            { name: 'Pantene Shampoo 180ml', category: 'Shampoo', price: 90.0, stock: 20 },
+            { name: 'Dove Shampoo 180ml', category: 'Shampoo', price: 85.0, stock: 20 },
+            { name: 'Lifebuoy Soap 125g', category: 'Soap', price: 15.0, stock: 30 },
+            { name: 'Dove Soap 100g', category: 'Soap', price: 20.0, stock: 30 },
+            { name: 'Lux Soap 100g', category: 'Soap', price: 25.0, stock: 30 },
+            { name: 'Pears Soap 100g', category: 'Soap', price: 36.0, stock: 30 },
+            { name: 'Fortune Sunflower Oil 1L', category: 'Oil', price: 150.0, stock: 15 },
+            { name: 'Saffola Gold Oil 1L', category: 'Oil', price: 155.0, stock: 15 },
+            { name: 'Dhara Mustard Oil 1L', category: 'Oil', price: 140.0, stock: 15 },
+            { name: 'Emami Soyabean Oil 1L', category: 'Oil', price: 130.0, stock: 15 },
+            { name: 'Aashirvaad Atta 5kg', category: 'Flour', price: 240.0, stock: 10 },
+            { name: 'Pillsbury Chakki Fresh Atta 5kg', category: 'Flour', price: 230.0, stock: 10 },
+            { name: 'Annapurna Atta 5kg', category: 'Flour', price: 220.0, stock: 10 },
+            { name: 'Parle-G 100g', category: 'Biscuits', price: 10.0, stock: 50 },
+            { name: 'Hide & Seek 120g', category: 'Biscuits', price: 20.0, stock: 50 },
+            { name: 'Good Day Butter 100g', category: 'Biscuits', price: 25.0, stock: 50 },
+            { name: 'Marie Gold 250g', category: 'Biscuits', price: 30.0, stock: 50 },
+            { name: 'Surf Excel Detergent 1kg', category: 'Detergent Powder', price: 120.0, stock: 20 },
+            { name: 'Ariel Matic 500g', category: 'Detergent Powder', price: 75.0, stock: 20 },
+            { name: 'Tide Detergent 1kg', category: 'Detergent Powder', price: 95.0, stock: 20 },
+            { name: 'Vim Bar 300g', category: 'Dish Wash', price: 10.0, stock: 30 },
+            { name: 'Exo Bar 250g', category: 'Dish Wash', price: 12.0, stock: 30 },
+            { name: 'Pril Liquid 500ml', category: 'Dish Wash', price: 75.0, stock: 30 },
+            { name: 'Kissan Tomato Ketchup 200g', category: 'Sauce', price: 55.0, stock: 20 },
+            { name: 'Maggi Hot & Sweet Sauce 200g', category: 'Sauce', price: 60.0, stock: 20 },
+            { name: 'Badam 250g', category: 'Dry Fruits', price: 180.0, stock: 15 },
+            { name: 'Kaju 250g', category: 'Dry Fruits', price: 210.0, stock: 15 },
+            { name: 'Kismis 250g', category: 'Dry Fruits', price: 120.0, stock: 15 },
+            { name: 'Paper Plate Large', category: 'Disposable', price: 3.0, stock: 200 },
+            { name: 'Paper Glass 100ml', category: 'Disposable', price: 1.5, stock: 200 },
+            { name: 'Plastic Spoon Pack of 10', category: 'Disposable', price: 8.0, stock: 100 },
+            { name: 'Camphor (Kapoor) 50g', category: 'Household', price: 25.0, stock: 50 },
+            { name: 'Coconut Rope 10m', category: 'Household', price: 40.0, stock: 20 },
+            { name: 'Mosquito Liquid Refill', category: 'Household', price: 65.0, stock: 30 },
+            { name: 'Incense Sticks (Agarbatti) 100pcs', category: 'Household', price: 50.0, stock: 50 },
+            { name: 'Colgate Strong Teeth 100g', category: 'Toothpaste', price: 45.0, stock: 30 },
+            { name: 'Colgate Sensitive 75g', category: 'Toothpaste', price: 55.0, stock: 25 },
+            { name: 'Pepsodent Germicheck 100g', category: 'Toothpaste', price: 40.0, stock: 30 },
+            { name: 'Sensodyne Fresh Mint 100g', category: 'Toothpaste', price: 150.0, stock: 15 },
+            { name: 'Closeup Everfresh 100g', category: 'Toothpaste', price: 50.0, stock: 30 },
+            { name: 'Dabur Red Paste 100g', category: 'Toothpaste', price: 35.0, stock: 20 },
+            { name: 'Himalaya Herbals Sparkly White 100g', category: 'Toothpaste', price: 60.0, stock: 20 },
+            { name: 'Vicco Vajradanti 75g', category: 'Toothpaste', price: 75.0, stock: 20 },
+            { name: 'Meswak Herbal 150g', category: 'Toothpaste', price: 55.0, stock: 25 },
+            { name: 'Oral-B Advantage 100g', category: 'Toothpaste', price: 65.0, stock: 20 },
+            { name: 'Closeup Deep Action 150g', category: 'Toothpaste', price: 80.0, stock: 20 },
+            { name: 'Sensodyne Rapid Relief 50g', category: 'Toothpaste', price: 120.0, stock: 15 },
+            { name: 'Amul Pure Ghee 500ml', category: 'Grocery', price: 340.0, stock: 20 },
+            { name: 'Patanjali Cow Ghee 500ml', category: 'Grocery', price: 320.0, stock: 15 },
+            { name: 'Gowardhan Pure Cow Ghee 500ml', category: 'Grocery', price: 350.0, stock: 12 },
+        ];
+        
+        // ====================================================================
+        // === CRITICAL: PASTE YOUR FIREBASE CONFIG HERE TO AVOID THE ERROR! ===
+        
+        const firebaseConfig = {
+          apiKey: "AIzaSyCGm2UUshcImQcUj0bWZuhJ0JOvQCY13h4",
+          authDomain: "grocery-dashboard-1d8c7.firebaseapp.com",
+          projectId: "grocery-dashboard-1d8c7",
+          storageBucket: "grocery-dashboard-1d8c7.firebasestorage.app",
+          messagingSenderId: "1098665808779",
+          appId: "1:1098665808779:web:e4cbc5f10e12df9ee45558e",
+          measurementId: "G-L0SQ7SNR89"
+        };
+        const initialAuthToken = "vCM9L1oyPkN6eLwuI1Hz2JuDbHu1"; // Keep this as null for anonymous sign-in
+        // ====================================================================
+
+        // --- Firebase Initialization and Authentication ---
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let inventoryCache = []; 
+        let listenersInitialized = false;
+        
+        const appId = firebaseConfig.projectId; 
+
+        const initializeAppAndAuth = async () => {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 1. Establish an authenticated session (anonymous is fine)
+                const userCredential = await signInAnonymously(auth);
+
+                // 2. Determine the UserId for data storage path:
+                if (initialAuthToken && initialAuthToken.length > 10) {
+                    // BRUTAL FIX: Use the hardcoded ID for data storage path 
+                    // across all devices, ensuring data synchronization.
+                    userId = initialAuthToken;
+                } else {
+                    // Fallback: Use the new unique anonymous ID.
+                    userId = userCredential.user.uid;
+                }
+
+                // 3. Display the ID and start listening to the database
+                document.getElementById('user-id').textContent = userId;
+                
+                await initializeInventoryData();
+                if (!listenersInitialized) {
+                    listenersInitialized = true;
+                    initListeners();
+                }
+
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                document.getElementById('user-id').textContent = `Auth/Init Error: ${error.code || error.message}`;
+            }
+        };
+
+        const initUI = () => {
+            const todayFormatted = new Date().toISOString().split('T')[0];
+
+            document.getElementById('sales-date').valueAsDate = new Date();
+            document.getElementById('purchase-date').valueAsDate = new Date();
+            document.getElementById('expense-date').valueAsDate = new Date();
+            
+            document.getElementById('report-start-date').value = todayFormatted;
+            document.getElementById('report-end-date').value = todayFormatted;
+
+            document.getElementById('sales-quantity').value = 1;
+            document.getElementById('purchase-quantity').value = 12;
+        };
+
+        window.onload = () => {
+            initializeAppAndAuth();
+            initUI(); 
+        };
+
+        // --- Core Application Logic ---
+        const navItems = document.querySelectorAll('.nav-item');
+        const pageSections = document.querySelectorAll('.page-section');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const todayTimestamp = today.getTime(); 
+        
+        const salesInvoiceItems = [];
+        const purchaseInvoiceItems = [];
+
+        const showSection = (sectionId) => {
+            pageSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            navItems.forEach(item => {
+                item.classList.remove('active-link', 'bg-gray-100', 'text-blue-600');
+            });
+            
+            let targetItem = document.querySelector(`[data-section="${sectionId}"]`);
+            if (targetItem) {
+                targetItem.classList.add('active-link', 'bg-gray-100', 'text-blue-600');
+            }
+        };
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = e.currentTarget.dataset.section;
+                if (sectionId) {
+                    showSection(sectionId);
+                }
+            });
+        });
+
+        const initialSectionId = 'dashboard';
+        document.getElementById(initialSectionId).classList.remove('hidden');
+        document.querySelector(`[data-section="${initialSectionId}"]`).classList.add('active-link');
+
+        // --- Helper Functions ---
+        const getCollectionRef = (name) => collection(db, `users/${userId}/${name}`); 
+
+        const formatDate = (timestamp) => new Date(timestamp).toLocaleDateString();
+        const formatCurrency = (amount) => `₹${amount.toFixed(2)}`;
+        const clearForm = (formId) => document.getElementById(formId).reset();
+        
+        const updateInventory = async (item, quantityChange) => {
+            const itemRef = doc(getCollectionRef('inventory'), item.toLowerCase());
+            const itemSnap = await getDoc(itemRef);
+
+            if (!itemSnap.exists()) {
+                 await setDoc(itemRef, {
+                    item: item,
+                    stock: quantityChange, 
+                    price: 0, 
+                    category: 'Uncategorized'
+                });
+                console.log(`New inventory item created: ${item}`);
+            } else {
+                await updateDoc(itemRef, {
+                    stock: increment(quantityChange)
+                });
+            }
+        };
+
+        const initializeInventoryData = async () => {
+            const inventoryRef = getCollectionRef('inventory');
+            const snapshot = await getDocs(inventoryRef);
+            if (snapshot.empty) {
+                for (const product of PRODUCTS_DATA) {
+                    await setDoc(doc(inventoryRef, product.name.toLowerCase()), {
+                        item: product.name,
+                        stock: product.stock,
+                        price: product.price,
+                        category: product.category || 'Uncategorized'
+                    });
+                }
+            }
+        };
+
+        const updateContactDatalists = (collectionName, data) => {
+            const datalistId = collectionName === 'customers' ? 'customer-names' : 'vendor-names';
+            const datalistEl = document.getElementById(datalistId);
+            datalistEl.innerHTML = '';
+            
+            data.forEach(item => {
+                if (item.name) {
+                    datalistEl.innerHTML += `<option value="${item.name}"></option>`;
+                }
+            });
+        };
+
+        const saveContact = async (e, collectionName) => {
+            e.preventDefault();
+            const nameInput = document.getElementById(`new-${collectionName.slice(0, -1)}-name`);
+            const contactInput = document.getElementById(`new-${collectionName.slice(0, -1)}-contact`);
+            
+            const name = nameInput.value.trim();
+            const contact = contactInput.value.trim();
+
+            if (!name) return alert('Name is required.');
+
+            try {
+                const docRef = doc(getCollectionRef(collectionName), name.toLowerCase());
+                await setDoc(docRef, {
+                    name: name,
+                    contact: contact
+                }, { merge: true });
+
+                alert(`${name} added successfully to ${collectionName}!`);
+                nameInput.value = '';
+                contactInput.value = '';
+            } catch (error) {
+                console.error(`Error adding new ${collectionName} contact: `, error);
+                alert(`Failed to add contact. It may already exist.`);
+            }
+        };
+
+        document.getElementById('add-customer-form').addEventListener('submit', (e) => saveContact(e, 'customers'));
+        document.getElementById('add-vendor-form').addEventListener('submit', (e) => saveContact(e, 'vendors'));
+
+
+        // --- Inventory/Product Management Core Functionality ---
+        const renderInventoryTable = (data, listElementId, showActions = true) => {
+            const listEl = document.getElementById(listElementId);
+            listEl.innerHTML = '';
+            if (data.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No matching inventory items.</td></tr>`;
+                return;
+            }
+            data.forEach(item => {
+                const stockClass = item.stock < 10 ? 'text-red-500' : 'text-green-500';
+                const actionButtons = showActions ? `
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-btn" data-id="${item.id}">✏️</button>
+                    <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${item.id}">🗑️</button>
+                ` : '';
+
+                listEl.innerHTML += `
+                    <tr data-doc-id="${item.id}">
+                        <td class="px-6 py-4 whitespace-nowrap">${item.item}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.category || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(item.price)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold ${stockClass}">${item.stock}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+        
+        // NEW: Store the global list render function references
+        let customerListRenderer = () => {};
+        let vendorListRenderer = () => {};
+        // NEW: Store the currently active card for the toggle feature
+        let currentActiveCard = null;
+
+
+        // --- Event Listeners and OnSnapshot Functions (Requires Auth) ---
+        const initListeners = () => {
+            if (!userId) return;
+
+            // --- Dashboard Detail Rendering ---
+            const renderDashboardDetails = async (type) => {
+                const listEl = document.getElementById('dashboard-transaction-list');
+                
+                // Note: The list is cleared externally in handleCardClick for combined reports (Expenses/Profit)
+
+                const startDate = todayTimestamp; // Already calculated at midnight
+
+                let collectionNames = [];
+                let titleText = "";
+                
+                if (type === 'sales') {
+                    collectionNames = ['sales'];
+                    titleText = "Today's Sales Transactions (All Sales)";
+                } else if (type === 'purchases') {
+                    collectionNames = ['purchases'];
+                    titleText = "Today's Purchases";
+                } else if (type === 'expenses') {
+                    collectionNames = ['purchases', 'expenses'];
+                    titleText = "Today's Expenses (Purchases + Misc.)";
+                } else if (type === 'profit') {
+                    collectionNames = ['sales', 'purchases', 'expenses'];
+                    titleText = "Today's Net Profit Breakdown";
+                }
+
+                let hasData = false;
+                
+                for (const collectionName of collectionNames) {
+                    const snapshot = await getDocs(query(getCollectionRef(collectionName), where('date', '>=', startDate), orderBy('date', 'desc')));
+                    
+                    if (!snapshot.empty) {
+                        hasData = true;
+                    }
+
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        let description = '';
+                        let amount = 0;
+                        let amountColor = '';
+                        let amountSign = '';
+
+                        if (collectionName === 'expenses') {
+                            // Regular Expense
+                            description = data.item;
+                            amount = data.amount;
+                            amountColor = 'text-red-600';
+                            amountSign = '-';
+                        } else if (collectionName === 'sales' || collectionName === 'purchases') {
+                            // Sale/Purchase Transaction
+                            if (data.items && data.items.length > 0) {
+                                const typeKey = collectionName === 'sales' ? 'customer' : 'vendor';
+                                const contact = data[typeKey] || 'Walk-in/Unknown';
+                                const itemCount = data.items.length;
+                                amount = data.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                                description = `${collectionName === 'sales' ? 'Sold' : 'Purchased'}: ${itemCount} item(s) from/to ${contact} (${data.paymentMethod})`;
+                                
+                                if (collectionName === 'purchases') {
+                                    amountColor = 'text-red-600';
+                                    amountSign = '-';
+                                } else { // Sales
+                                    amountColor = 'text-green-600';
+                                    amountSign = '+';
+                                }
+                            } else {
+                                // Skip payment/credit entries as they don't represent the initial transaction cost/revenue
+                                return;
+                            }
+                        }
+                        
+                        if (amount > 0) {
+                            listEl.innerHTML += `
+                                <div class="flex justify-between items-center p-3 border-b border-gray-100 last:border-b-0">
+                                    <p class="text-sm text-gray-800">${description}</p>
+                                    <p class="font-bold ${amountColor}">${amountSign}${formatCurrency(amount)}</p>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                document.getElementById('dashboard-details-title').textContent = titleText;
+
+                if (!hasData && listEl.innerHTML === '') {
+                    listEl.innerHTML = `<p class="text-center text-gray-500 p-4">No ${type} recorded today.</p>`;
+                }
+            };
+
+            // --- Click Handlers for Dashboard Cards ---
+            const detailContainer = document.getElementById('dashboard-details');
+
+            const handleCardClick = async (type) => {
+                const cardId = `card-${type}`;
+                const listEl = document.getElementById('dashboard-transaction-list');
+
+                if (currentActiveCard === cardId) {
+                    // Clicking the active card again hides the details
+                    detailContainer.classList.add('hidden');
+                    listEl.innerHTML = '';
+                    currentActiveCard = null;
+                } else {
+                    // Clicking a new card shows the new details
+                    listEl.innerHTML = '<p class="text-center text-gray-500 p-4">Loading transactions...</p>';
+                    detailContainer.classList.remove('hidden');
+                    
+                    // The rendering function handles clearing and appending based on type
+                    await renderDashboardDetails(type);
+
+                    currentActiveCard = cardId;
+                }
+            };
+            
+            document.getElementById('card-sales').addEventListener('click', () => handleCardClick('sales'));
+            document.getElementById('card-expenses').addEventListener('click', () => handleCardClick('expenses'));
+            document.getElementById('card-profit').addEventListener('click', () => handleCardClick('profit'));
+            
+            // --- Live Inventory Listener ---
+            onSnapshot(getCollectionRef('inventory'), (snapshot) => {
+                inventoryCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const uniqueCategories = [...new Set(inventoryCache.map(item => item.category || 'Uncategorized'))];
+                const categoryOptions = `<option value="all">All Categories</option>` + uniqueCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+                
+                document.getElementById('inventory-filter-category').innerHTML = categoryOptions;
+                document.getElementById('product-management-filter-category').innerHTML = categoryOptions;
+                const categoryDatalist = document.getElementById('category-names');
+                categoryDatalist.innerHTML = uniqueCategories.map(cat => `<option value="${cat}"></option>`).join('');
+                
+                const salesDatalist = document.getElementById('product-names-sales');
+                const purchaseDatalist = document.getElementById('product-names-purchase');
+                salesDatalist.innerHTML = '';
+                purchaseDatalist.innerHTML = '';
+                inventoryCache.forEach(product => {
+                    salesDatalist.innerHTML += `<option value="${product.item}"></option>`;
+                    purchaseDatalist.innerHTML += `<option value="${product.item}"></option>`;
+                });
+
+                const invSearchTerm = document.getElementById('inventory-search').value.toLowerCase();
+                const invCategory = document.getElementById('inventory-filter-category').value;
+                const invFiltered = inventoryCache.filter(item => 
+                    item.item.toLowerCase().includes(invSearchTerm) && (invCategory === 'all' || item.category === invCategory)
+                );
+                renderInventoryTable(invFiltered, 'inventory-list', true);
+
+                const pmSearchEl = document.getElementById('product-management-search');
+                const pmCategory = document.getElementById('product-management-filter-category').value;
+                const pmFiltered = inventoryCache.filter(item => 
+                    item.item.toLowerCase().includes(pmSearchEl.value.toLowerCase()) && (pmCategory === 'all' || item.category === pmCategory)
+                );
+                renderInventoryTable(pmFiltered, 'product-management-list', true);
+            });
+             document.getElementById('clear-all-btn').addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to delete ALL sales, purchases, and expenses? This cannot be undone!')) return;
+        const batch = writeBatch(db);
+
+        const salesSnap = await getDocs(getCollectionRef('sales'));
+        salesSnap.forEach(doc => batch.delete(doc.ref));
+
+        const purchasesSnap = await getDocs(getCollectionRef('purchases'));
+        purchasesSnap.forEach(doc => batch.delete(doc.ref));
+
+        const expensesSnap = await getDocs(getCollectionRef('expenses'));
+        expensesSnap.forEach(doc => batch.delete(doc.ref));
+        
+        const customersSnap = await getDocs(getCollectionRef('customers'));
+        customersSnap.forEach(doc => batch.delete(doc.ref)); 
+
+        const vendorsSnap = await getDocs(getCollectionRef('vendors'));
+        vendorsSnap.forEach(doc => batch.delete(doc.ref)); 
+
+        await batch.commit();
+        alert('All transactions cleared! Dashboard will reset to zero.');
+    });
+
+            // --- Product Management Logic ---
+
+            document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('product-name').value.trim();
+                const category = document.getElementById('product-category').value.trim() || 'Uncategorized';
+                const price = parseFloat(document.getElementById('product-price').value);
+                const stock = parseInt(document.getElementById('product-stock').value, 10);
+                
+                if (inventoryCache.some(item => item.id === name.toLowerCase())) {
+                     alert(`Product "${name}" already exists in the inventory.`);
+                     return;
+                }
+
+                try {
+                    const itemRef = doc(getCollectionRef('inventory'), name.toLowerCase());
+                    await setDoc(itemRef, {
+                        item: name,
+                        category: category,
+                        price: price,
+                        stock: stock
+                    });
+                    alert(`Product "${name}" added successfully!`);
+                    clearForm('add-product-form');
+                } catch (error) {
+                    console.error("Error adding new product: ", error);
+                    alert("Failed to add product. Check console for details.");
+                }
+            });
+
+            const pmSearchEl = document.getElementById('product-management-search');
+            const pmFilterEl = document.getElementById('product-management-filter-category');
+
+            const filterAndRenderPm = () => {
+                const searchTerm = pmSearchEl.value.toLowerCase();
+                const category = pmFilterEl.value;
+                const filtered = inventoryCache.filter(item => {
+                    const matchesSearch = item.item.toLowerCase().includes(searchTerm);
+                    const matchesCategory = category === 'all' || item.category === category;
+                    return matchesSearch && matchesCategory;
+                });
+                renderInventoryTable(filtered, 'product-management-list', true);
+            };
+
+            pmSearchEl.addEventListener('input', filterAndRenderPm);
+            pmFilterEl.addEventListener('change', filterAndRenderPm);
+            
+            const invSearchEl = document.getElementById('inventory-search');
+            const invFilterEl = document.getElementById('inventory-filter-category');
+
+            const filterAndRenderInv = () => {
+                const searchTerm = invSearchEl.value.toLowerCase();
+                const category = invFilterEl.value;
+                const filtered = inventoryCache.filter(item => {
+                    const matchesSearch = item.item.toLowerCase().includes(searchTerm);
+                    const matchesCategory = category === 'all' || item.category === category;
+                    return matchesSearch && matchesCategory;
+                });
+                renderInventoryTable(filtered, 'inventory-list', true);
+            };
+
+            invSearchEl.addEventListener('input', filterAndRenderInv);
+            invFilterEl.addEventListener('change', filterAndRenderInv);
+
+            const handleInventoryAction = async (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const docId = button.dataset.id;
+                
+                if (button.classList.contains('edit-btn')) {
+                    const itemData = inventoryCache.find(item => item.id === docId);
+                    const newName = prompt(`Edit name for ${itemData.item}:`, itemData.item);
+                    const newPrice = prompt(`Edit price for ${itemData.item}:`, itemData.price);
+                    
+                    if (newName !== null && newPrice !== null) {
+                        await updateDoc(doc(getCollectionRef('inventory'), docId), {
+                            item: newName,
+                            price: parseFloat(newPrice)
+                        });
+                        alert(`Item updated: ${newName} at ${formatCurrency(parseFloat(newPrice))}`);
+                    }
+                } else if (button.classList.contains('delete-btn')) {
+                    if (confirm(`Are you sure you want to delete ${docId}? This cannot be undone.`)) {
+                        await deleteDoc(doc(getCollectionRef('inventory'), docId));
+                    }
+                }
+            };
+
+            document.getElementById('inventory-list').addEventListener('click', handleInventoryAction);
+            document.getElementById('product-management-list').addEventListener('click', handleInventoryAction);
+
+            // --- Sales & Purchase Entry Logic (Uses live cache) ---
+            
+            const salesItemInput = document.getElementById('sales-item');
+            const salesPriceInput = document.getElementById('sales-price');
+
+            salesItemInput.addEventListener('input', (e) => {
+                const selectedProduct = inventoryCache.find(p => p.item === e.target.value);
+                if (selectedProduct) salesPriceInput.value = selectedProduct.price.toFixed(2);
+            });
+
+            document.getElementById('add-to-invoice-btn').addEventListener('click', () => {
+                const item = salesItemInput.value;
+                const quantity = parseInt(document.getElementById('sales-quantity').value, 10);
+                const price = parseFloat(document.getElementById('sales-price').value);
+
+                if (!item || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+                    alert('Please fill out item, quantity, and price.');
+                    return;
+                }
+                const existingIndex = salesInvoiceItems.findIndex(i => i.item === item);
+                if (existingIndex !== -1) {
+                    salesInvoiceItems[existingIndex].quantity += quantity;
+                } else {
+                    salesInvoiceItems.push({ item, quantity, price });
+                }
+
+                renderInvoice('sales');
+                const currentCustomerName = document.getElementById('sales-customer').value; 
+                clearForm('sales-form');
+                document.getElementById('sales-customer').value = currentCustomerName; 
+
+                document.getElementById('sales-quantity').value = 1; 
+                document.getElementById('sales-date').valueAsDate = new Date(); 
+            });
+
+            document.getElementById('save-sales-transaction').addEventListener('click', async () => {
+                const customer = document.getElementById('sales-customer').value;
+                const date = new Date(document.getElementById('sales-date').value).getTime();
+                const paymentMethod = document.getElementById('sales-payment-method').value;
+
+                if (!customer || salesInvoiceItems.length === 0) {
+                    alert('Please enter a customer name and at least one item.');
+                    return;
+                }
+                const total = salesInvoiceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                const transaction = {
+                    date,
+                    customer,
+                    paymentMethod,
+                    items: [...salesInvoiceItems],
+                    total
+                };
+                
+                await addDoc(getCollectionRef('sales'), transaction);
+
+                const customerRef = doc(getCollectionRef('customers'), customer.toLowerCase());
+                const balanceChange = paymentMethod === 'credit' ? total : 0; 
+
+                await setDoc(customerRef, { 
+                    name: customer, 
+                    balance: increment(balanceChange)
+                }, { merge: true });
+                
+                for (const item of salesInvoiceItems) {
+                    await updateInventory(item.item, -item.quantity);
+                }
+
+                salesInvoiceItems.length = 0;
+                renderInvoice('sales');
+                clearForm('sales-form');
+                document.getElementById('sales-date').valueAsDate = new Date();
+                document.getElementById('sales-invoice').classList.add('hidden');
+            });
+            
+            const purchaseItemInput = document.getElementById('purchase-item');
+            const purchasePriceInput = document.getElementById('purchase-price');
+
+            purchaseItemInput.addEventListener('input', (e) => {
+                const selectedProduct = inventoryCache.find(p => p.item === e.target.value);
+                if (selectedProduct) purchasePriceInput.value = selectedProduct.price.toFixed(2);
+            });
+
+            document.getElementById('add-to-purchase-invoice-btn').addEventListener('click', () => {
+                const item = purchaseItemInput.value;
+                const quantity = parseInt(document.getElementById('purchase-quantity').value, 10);
+                const price = parseFloat(document.getElementById('purchase-price').value);
+
+                if (!item || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+                    alert('Please fill out item, quantity, and price.');
+                    return;
+                }
+                const existingIndex = purchaseInvoiceItems.findIndex(i => i.item === item);
+                if (existingIndex !== -1) {
+                    purchaseInvoiceItems[existingIndex].quantity += quantity;
+                } else {
+                    purchaseInvoiceItems.push({ item, quantity, price });
+                }
+                renderInvoice('purchase');
+                const currentVendorName = document.getElementById('purchase-vendor').value; 
+                clearForm('purchase-form');
+                document.getElementById('purchase-vendor').value = currentVendorName; 
+
+                document.getElementById('purchase-quantity').value = 12; 
+                document.getElementById('purchase-date').valueAsDate = new Date(); 
+            });
+            
+            document.getElementById('save-purchase-transaction').addEventListener('click', async () => {
+                const vendor = document.getElementById('purchase-vendor').value;
+                const date = new Date(document.getElementById('purchase-date').value).getTime();
+                const paymentMethod = document.getElementById('purchase-payment-method').value;
+
+                if (!vendor || purchaseInvoiceItems.length === 0) {
+                    alert('Please enter a vendor name and at least one item.');
+                    return;
+                }
+                const total = purchaseInvoiceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                const transaction = {
+                    date,
+                    vendor,
+                    paymentMethod,
+                    items: [...purchaseInvoiceItems],
+                    total
+                };
+                
+                await addDoc(getCollectionRef('purchases'), transaction);
+
+                const vendorRef = doc(getCollectionRef('vendors'), vendor.toLowerCase());
+                const balanceChange = paymentMethod === 'credit' ? total : 0; 
+                await setDoc(vendorRef, { 
+                    name: vendor, 
+                    balance: increment(balanceChange) 
+                }, { merge: true });
+
+                for (const item of purchaseInvoiceItems) {
+                    await updateInventory(item.item, item.quantity);
+                }
+
+                purchaseInvoiceItems.length = 0;
+                renderInvoice('purchase');
+                clearForm('purchase-form');
+                document.getElementById('purchase-date').valueAsDate = new Date();
+                document.getElementById('purchase-invoice').classList.add('hidden');
+            });
+            
+            const renderInvoice = (type) => {
+                const invoiceItems = type === 'sales' ? salesInvoiceItems : purchaseInvoiceItems;
+                const invoiceListEl = type === 'sales' ? 'sales-invoice-items' : 'purchase-invoice-items';
+                const invoiceTotalEl = type === 'sales' ? 'sales-invoice-total' : 'purchase-invoice-total';
+                const invoiceContainerEl = type === 'sales' ? 'sales-invoice' : 'purchase-invoice';
+
+                const listEl = document.getElementById(invoiceListEl);
+                const totalEl = document.getElementById(invoiceTotalEl);
+                const containerEl = document.getElementById(invoiceContainerEl);
+
+                listEl.innerHTML = '';
+                let total = 0;
+
+                if (invoiceItems.length > 0) {
+                    containerEl.classList.remove('hidden');
+                    invoiceItems.forEach((item, index) => {
+                        const itemTotal = item.quantity * item.price;
+                        total += itemTotal;
+                        const listItem = document.createElement('li');
+                        listItem.className = 'flex justify-between items-center bg-white p-3 rounded-md shadow-sm';
+                        listItem.innerHTML = `
+                            <span>${item.item} (Qty: ${item.quantity}) - ${formatCurrency(itemTotal)}</span>
+                            <button class="text-red-500 font-bold ml-4 remove-item-btn" data-index="${index}">&times;</button>
+                        `;
+                        listEl.appendChild(listItem);
+                    });
+                } else {
+                    containerEl.classList.add('hidden');
+                }
+                totalEl.textContent = formatCurrency(total);
+            };
+
+            document.getElementById('sales-invoice-items').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-item-btn')) {
+                    const index = e.target.dataset.index;
+                    salesInvoiceItems.splice(index, 1);
+                    renderInvoice('sales');
+                }
+            });
+
+            document.getElementById('purchase-invoice-items').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-item-btn')) {
+                    const index = e.target.dataset.index;
+                    purchaseInvoiceItems.splice(index, 1);
+                    renderInvoice('purchase');
+                }
+            });
+
+
+            // Expense Entry
+            document.getElementById('expense-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const item = document.getElementById('expense-item').value;
+                const amount = parseFloat(document.getElementById('expense-amount').value);
+                const date = new Date(document.getElementById('expense-date').value).getTime();
+                if (!item || isNaN(amount) || !date) return;
+                
+                await addDoc(getCollectionRef('expenses'), { item, amount, date });
+                document.getElementById('expense-form').reset();
+                document.getElementById('expense-date').valueAsDate = new Date();
+            });
+            
+            onSnapshot(query(getCollectionRef('expenses'), orderBy('date', 'desc'), limit(10)), (snapshot) => {
+                const list = document.getElementById('expense-list');
+                const uniqueExpenses = [...new Set(snapshot.docs.map(doc => doc.data().item))];
+                const datalist = document.getElementById('expense-names');
+                datalist.innerHTML = '';
+                uniqueExpenses.forEach(exp => datalist.innerHTML += `<option value="${exp}"></option>`);
+                
+                list.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-gray-700 border-t pt-4">Recent Expenses</h3>`; 
+                
+                if (snapshot.empty) {
+                    list.innerHTML += `<p class="text-center text-gray-500 p-4">No expense entries found yet.</p>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    list.innerHTML += `<div class="bg-gray-50 p-3 rounded-lg flex justify-between">
+                        <div><p class="font-semibold">${data.item}</p><p class="text-sm text-gray-500">Date: ${formatDate(data.date)}</p></div>
+                        <p class="font-bold text-red-600">-${formatCurrency(data.amount)}</p>
+                    </div>`;
+                });
+            });
+
+            // Dashboard Listener 
+            let dashboardSales = 0;
+            let dashboardExpenses = 0;
+            
+            const updateDashboardNetProfit = () => {
+                const net = dashboardSales - dashboardExpenses;
+                document.getElementById('dashboard-net-profit').textContent = formatCurrency(net);
+            };
+
+            const updateDashboardData = () => {
+                
+                onSnapshot(query(getCollectionRef('sales'), where('date', '>=', todayTimestamp)), (snapshot) => {
+                    let dailySales = 0;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.items && data.items.length > 0) { 
+                             data.items.forEach(item => dailySales += item.quantity * item.price);
+                        }
+                    });
+                    dashboardSales = dailySales;
+                    document.getElementById('dashboard-sales').textContent = formatCurrency(dailySales);
+                    updateDashboardNetProfit();
+                });
+
+                const recalculateExpenses = () => {
+                    let totalPurchases = 0;
+                    let totalExpenses = 0;
+
+                    getDocs(query(getCollectionRef('purchases'), where('date', '>=', todayTimestamp))).then(purchaseSnapshot => {
+                        purchaseSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(item => totalPurchases += item.quantity * item.price);
+                            }
+                        });
+
+                        getDocs(query(getCollectionRef('expenses'), where('date', '>=', todayTimestamp))).then(expenseSnapshot => {
+                            expenseSnapshot.forEach(doc => totalExpenses += doc.data().amount);
+                            
+                            dashboardExpenses = totalPurchases + totalExpenses;
+                            document.getElementById('dashboard-expenses').textContent = formatCurrency(dashboardExpenses);
+                            updateDashboardNetProfit();
+                        });
+                    });
+                };
+                
+                onSnapshot(query(getCollectionRef('purchases')), recalculateExpenses);
+                onSnapshot(query(getCollectionRef('expenses')), recalculateExpenses);
+            };
+            updateDashboardData();
+
+            // Income & Expense Report
+            document.getElementById('report-today-btn').addEventListener('click', () => {
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                document.getElementById('report-start-date').value = formattedDate;
+                document.getElementById('report-end-date').value = formattedDate;
+                document.getElementById('generate-report-btn').click();
+            });
+
+            document.getElementById('report-month-btn').addEventListener('click', () => {
+                const today = new Date();
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                document.getElementById('report-start-date').value = startOfMonth;
+                document.getElementById('report-end-date').value = endOfMonth;
+                document.getElementById('generate-report-btn').click();
+            });
+            
+            document.getElementById('report-year-btn').addEventListener('click', () => {
+                const today = new Date();
+                const startOfYear = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+                const endOfYear = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
+                document.getElementById('report-start-date').value = startOfYear;
+                document.getElementById('report-end-date').value = endOfYear;
+                document.getElementById('generate-report-btn').click();
+            });
+
+            document.getElementById('generate-report-btn').addEventListener('click', async () => {
+                const startDateInput = document.getElementById('report-start-date').value;
+                const endDateInput = document.getElementById('report-end-date').value;
+
+                if (!startDateInput || !endDateInput) {
+                    alert('Please select a start and end date.');
+                    return;
+                }
+
+                const startDate = new Date(startDateInput);
+                startDate.setHours(0, 0, 0, 0);
+                const startDateTimestamp = startDate.getTime();
+
+                const endDate = new Date(endDateInput);
+                endDate.setHours(23, 59, 59, 999);
+                const endDateTimestamp = endDate.getTime();
+
+                let totalSales = 0;
+                let totalPurchases = 0;
+                let totalExpenses = 0;
+
+                const salesSnapshot = await getDocs(query(getCollectionRef('sales'), where('date', '>=', startDateTimestamp), where('date', '<=', endDateTimestamp)));
+                salesSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.items && Array.isArray(data.items)) {
+                        data.items.forEach(item => totalSales += item.quantity * item.price);
+                    }
+                });
+
+                const purchasesSnapshot = await getDocs(query(getCollectionRef('purchases'), where('date', '>=', startDateTimestamp), where('date', '<=', endDateTimestamp)));
+                purchasesSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.items && Array.isArray(data.items)) {
+                        data.items.forEach(item => totalPurchases += item.quantity * item.price);
+                    }
+                });
+
+                const expensesSnapshot = await getDocs(query(getCollectionRef('expenses'), where('date', '>=', startDateTimestamp), where('date', '<=', endDateTimestamp)));
+                expensesSnapshot.forEach(doc => totalExpenses += doc.data().amount);
+
+                const netProfit = totalSales - (totalPurchases + totalExpenses);
+
+                document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+                document.getElementById('total-expenses').textContent = formatCurrency(totalPurchases + totalExpenses);
+                document.getElementById('net-profit-report').textContent = formatCurrency(netProfit);
+            });
+            
+            // Customer/Vendor Detail Modal Logic 
+            const modal = document.getElementById('details-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBalanceLabel = document.getElementById('modal-balance-label');
+            const modalBalanceAmount = document.getElementById('modal-balance-amount');
+            const modalTransactionList = document.getElementById('modal-transaction-list');
+            const paymentForm = document.getElementById('payment-form');
+            let currentContactId = null;
+            let currentContactType = null;
+            let currentTransactionUnsub = null;
+
+            document.getElementById('close-modal').addEventListener('click', () => {
+                modal.classList.add('hidden');
+                if (currentTransactionUnsub) currentTransactionUnsub();
+                
+                if (currentContactType === 'customer' && customerListRenderer) {
+                    customerListRenderer(document.getElementById('customers-search').value);
+                } else if (currentContactType === 'vendor' && vendorListRenderer) {
+                    vendorListRenderer(document.getElementById('vendors-search').value);
+                }
+            });
+
+            window.showContactDetails = async (id, name, type) => {
+                currentContactId = id;
+                currentContactType = type;
+                modalTitle.textContent = name;
+                modalBalanceLabel.textContent = type === 'customer' ? 'Total Credit Due:' : 'Total Payable:';
+
+                const transactionRef = getCollectionRef(type === 'customer' ? 'sales' : 'purchases');
+                let trueBalance = 0;
+
+                const transactionsSnap = await getDocs(query(transactionRef, where(type, '==', name)));
+                transactionsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.paymentAmount) {
+                        trueBalance += (data.paymentType === 'payment' ? -data.paymentAmount : data.paymentAmount);
+                    } else if (data.paymentMethod === 'credit') {
+                        const transactionTotal = data.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                        trueBalance += transactionTotal;
+                    } 
+                });
+
+                modalBalanceAmount.textContent = formatCurrency(Math.abs(trueBalance));
+                
+                const isPositiveBalance = trueBalance > 0;
+                const balanceColorClass = isPositiveBalance ? 'text-red-600' : 'text-green-600';
+
+                modalBalanceAmount.className = `text-2xl font-bold ${balanceColorClass}`;
+
+                if (currentTransactionUnsub) currentTransactionUnsub();
+                currentTransactionUnsub = onSnapshot(query(transactionRef, where(type, '==', name), orderBy('date', 'desc')), (snapshot) => {
+                    modalTransactionList.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const isPaymentEntry = !!data.paymentAmount;
+                        const listItem = document.createElement('li');
+                        listItem.className = `flex justify-between items-center p-3 rounded-md shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50`;
+
+                        if (isPaymentEntry) {
+                            const paymentType = data.paymentType === 'payment' ? 'Payment Received' : 'Credit Given';
+                            const color = data.paymentType === 'payment' ? 'text-green-600' : 'text-red-600';
+                            const sign = data.paymentType === 'payment' ? '-' : '+';
+                            listItem.innerHTML = `
+                                <span>${formatDate(data.date)} - ${paymentType}</span>
+                                <span class="font-bold ${color}">${sign}${formatCurrency(data.paymentAmount)}</span>
+                            `;
+                        } else {
+                            const transactionTotal = data.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                            const paymentColor = data.paymentMethod === 'credit' ? 'text-red-600' : 'text-gray-600';
+                            listItem.innerHTML = `
+                                <span>${formatDate(data.date)} - ${data.items.length} items (${data.paymentMethod})</span>
+                                <span class="font-bold ${paymentColor}">${formatCurrency(transactionTotal)}</span>
+                            `;
+                            listItem.setAttribute('data-transaction-items', JSON.stringify(data.items));
+                        }
+
+                        modalTransactionList.appendChild(listItem);
+                    });
+                });
+
+                modal.classList.remove('hidden');
+            };
+
+            modal.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-transaction-items]');
+                if (target) {
+                    const items = JSON.parse(target.getAttribute('data-transaction-items'));
+                    let details = 'Items:\n';
+                    items.forEach(item => {
+                        details += `- ${item.item} (Qty: ${item.quantity}, Price: ${formatCurrency(item.price)}, Total: ${formatCurrency(item.quantity * item.price)})\n`;
+                    });
+                    alert(details);
+                }
+            });
+
+            paymentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const amount = parseFloat(document.getElementById('payment-amount').value);
+                const type = document.getElementById('payment-type').value;
+
+                if (isNaN(amount) || amount <= 0) return;
+
+                const contactRef = doc(getCollectionRef(currentContactType === 'customer' ? 'customers' : 'vendors'), currentContactId);
+                const balanceUpdate = type === 'payment' ? -amount : amount; 
+                await updateDoc(contactRef, { balance: increment(balanceUpdate) }).catch(e => console.log('Error updating balance doc (may not exist), continuing with transaction log.'));
+
+                await addDoc(getCollectionRef(currentContactType === 'customer' ? 'sales' : 'purchases'), {
+                    date: Date.now(),
+                    [currentContactType]: modalTitle.textContent,
+                    paymentAmount: amount,
+                    paymentType: type,
+                    items: []
+                });
+                
+                window.showContactDetails(currentContactId, modalTitle.textContent, currentContactType);
+                clearForm('payment-form');
+                
+                const searchInput = currentContactType === 'customer' ? document.getElementById('customers-search') : document.getElementById('vendors-search');
+                if (currentContactType === 'customer' && customerListRenderer) {
+                    customerListRenderer(searchInput.value);
+                } else if (currentContactType === 'vendor' && vendorListRenderer) {
+                    vendorListRenderer(searchInput.value);
+                }
+            });
+
+
+            const renderContactList = (collectionName) => {
+                const listId = `${collectionName}-list`;
+                const searchId = `${collectionName}-search`;
+                const searchInput = document.getElementById(searchId);
+                let currentData = [];
+
+                onSnapshot(getCollectionRef(collectionName), (snapshot) => {
+                    currentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    updateContactDatalists(collectionName, currentData);
+                    
+                    filterAndRenderList(searchInput.value);
+                });
+
+                searchInput.addEventListener('input', (e) => filterAndRenderList(e.target.value));
+
+                const filterAndRenderList = async (searchTerm) => {
+                    const list = document.getElementById(listId);
+                    list.innerHTML = '';
+                    const term = (searchTerm || '').toLowerCase();
+                    let filteredData = currentData;
+
+                    if (term) {
+                        filteredData = currentData.filter(data => 
+                            data.name && data.name.toLowerCase().includes(term)
+                        );
+                    }
+                    
+                    if (filteredData.length === 0) {
+                        if (currentData.length > 0 && term !== '') {
+                             list.innerHTML = `<p class="text-center text-gray-500">No results match your search.</p>`;
+                        } else if (currentData.length === 0) {
+                             list.innerHTML = `<p class="text-center text-gray-500 p-4">No ${collectionName} found. Add one above!</p>`;
+                        } else {
+                             list.innerHTML = `<p class="text-center text-gray-500">No results match your search.</p>`;
+                        }
+                        return;
+                    }
+                    
+                    const renderPromises = filteredData.map(async data => {
+                        const contactType = collectionName.slice(0, -1);
+                        let trueBalance = 0;
+                        const transactionRef = getCollectionRef(collectionName === 'customers' ? 'sales' : 'purchases');
+                        const transactionsSnap = await getDocs(query(transactionRef, where(contactType, '==', data.name)));
+                        
+                        transactionsSnap.forEach(doc => {
+                            const t = doc.data();
+                            if (t.paymentAmount) {
+                                trueBalance += (t.paymentType === 'payment' ? -t.paymentAmount : t.paymentAmount);
+                            } else if (t.paymentMethod === 'credit') {
+                                trueBalance += t.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                            }
+                        });
+
+                        const balanceIsPositive = trueBalance > 0;
+                        const balanceClass = balanceIsPositive
+                            ? 'text-red-600'
+                            : (trueBalance < 0 ? 'text-green-600' : 'text-gray-600');
+
+                        const balanceText = collectionName === 'customers'
+                            ? (balanceIsPositive
+                                ? `Credit Due: ${formatCurrency(trueBalance)}`
+                                : (trueBalance < 0
+                                    ? `Overpaid: ${formatCurrency(Math.abs(trueBalance))}`
+                                    : `Settled`)
+                              )
+                            : (balanceIsPositive 
+                                ? `Payment Due: ${formatCurrency(trueBalance)}`
+                                : (trueBalance < 0
+                                    ? `Credit Given: ${formatCurrency(Math.abs(trueBalance))}`
+                                    : `Settled`)
+                              );
+
+                        return `<div class="bg-gray-50 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-100 group">
+                            <div onclick="showContactDetails('${data.id}', '${data.name}', '${contactType}')">
+                                <p class="font-semibold">${data.name}</p>
+                                <p class="text-sm text-gray-500">${data.contact || 'N/A'}</p>
+                            </div>
+                            <span class="${balanceClass} font-bold text-sm text-right">${balanceText}</span>
+                            <button class="ml-4 px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700 delete-contact-btn" data-id="${data.id}" data-type="${collectionName}">Delete</button>
+                        </div>`;
+                    });
+
+                    const htmlItems = await Promise.all(renderPromises);
+                    list.innerHTML = htmlItems.join('');
+                };
+                
+                if (collectionName === 'customers') {
+                    customerListRenderer = filterAndRenderList;
+                } else {
+                    vendorListRenderer = filterAndRenderList;
+                }
+            };
+            
+            renderContactList('customers');
+            renderContactList('vendors');
+
+            document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-contact-btn')) {
+            const id = e.target.getAttribute('data-id');
+            const type = e.target.getAttribute('data-type');
+            if (confirm(`Are you sure you want to delete ${id} from ${type}? This cannot be undone.`)) {
+                await deleteDoc(doc(getCollectionRef(type), id));
+            }
+        }
+    });
+            
+            // Sales Analysis
+            let salesChartInstance = null;
+            onSnapshot(collection(db, `users/${userId}/sales`), (snapshot) => {
+                const salesQuantityData = {};
+                const salesRevenueData = {};
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            const productName = item.item;
+                            salesQuantityData[productName] = (salesQuantityData[productName] || 0) + item.quantity;
+                            salesRevenueData[productName] = (salesRevenueData[productName] || 0) + (item.quantity * item.price);
+                        });
+                    }
+                });
+
+                const sortedQuantity = Object.entries(salesQuantityData).sort(([, a], [, b]) => b - a);
+                const sortedRevenue = Object.entries(salesRevenueData).sort(([, a], [, b]) => b - a);
+
+                if (salesChartInstance) salesChartInstance.destroy();
+                
+                const chartData = sortedQuantity.slice(0, 5);
+                const labels = chartData.map(([item]) => item);
+                const data = chartData.map(([, quantity]) => quantity);
+                
+                const ctx = document.getElementById('sales-chart').getContext('2d');
+                salesChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantity Sold',
+                            data: data,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Quantity' } }
+                        }
+                    }
+                });
+
+                const list = document.getElementById('top-selling-products-revenue');
+                list.innerHTML = '';
+                if (sortedRevenue.length === 0) {
+                    list.innerHTML = `<p class="text-center text-gray-500">No sales data to analyze.</p>`;
+                } else {
+                    sortedRevenue.slice(0, 5).forEach(([item, revenue], index) => {
+                        list.innerHTML += `<div class="bg-gray-50 p-3 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
+                            <p class="font-semibold text-gray-800">${index + 1}. ${item}</p>
+                            <p class="font-bold text-green-600">₹${revenue.toFixed(2)}</p>
+                        </div>`;
+                    });
+                }
+            });
+        };
+    </script>
+</body>
+</html>
